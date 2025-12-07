@@ -1,0 +1,8 @@
+.router-link-active {
+  background-color: #007bff !important;
+  color: #fff !important;
+}
+
+.router-link-active i {
+  color: #fff !important;
+}
