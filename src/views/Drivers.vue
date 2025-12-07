@@ -18,6 +18,7 @@
                 <th>Name</th>
                 <th>License No</th>
                 <th>Phone</th>
+                <th>Status</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -28,8 +29,19 @@
                 <td>{{ driver.license }}</td>
                 <td>{{ driver.phone }}</td>
                 <td>
+                  <span
+                    :class="
+                      driver.status === 'Active'
+                        ? 'badge bg-success'
+                        : 'badge bg-secondary'
+                    "
+                  >
+                    {{ driver.status }}
+                  </span>
+                </td>
+                <td>
                   <button
-                    class="btn btn-sm btn-info"
+                    class="btn btn-sm btn-info me-1"
                     @click="editDriver(driver)"
                   >
                     Edit
@@ -41,6 +53,9 @@
                     Delete
                   </button>
                 </td>
+              </tr>
+              <tr v-if="drivers.length === 0">
+                <td colspan="6" class="text-center">No drivers found.</td>
               </tr>
             </tbody>
           </table>
@@ -54,19 +69,45 @@
 import { ref } from "vue";
 
 const drivers = ref([
-  { id: 1, name: "John Doe", license: "LIC12345", phone: "017XXXXXXX" },
-  { id: 2, name: "Jane Smith", license: "LIC67890", phone: "018XXXXXXX" },
+  {
+    id: 1,
+    name: "John Doe",
+    license: "LIC12345",
+    phone: "017XXXXXXX",
+    status: "Active",
+  },
+  {
+    id: 2,
+    name: "Jane Smith",
+    license: "LIC67890",
+    phone: "018XXXXXXX",
+    status: "Inactive",
+  },
 ]);
 
-function addDriver() {
-  alert("Add Driver form will open");
-}
-function editDriver(driver) {
-  alert("Edit Driver ID: " + driver.id);
-}
-function deleteDriver(id) {
-  if (confirm("Are you sure to delete driver #" + id)) {
+const addDriver = () => alert("Add Driver form will open!");
+const editDriver = (driver) => alert(`Edit Driver: ${driver.name}`);
+const deleteDriver = (id) => {
+  if (confirm(`Are you sure to delete driver #${id}?`)) {
     drivers.value = drivers.value.filter((d) => d.id !== id);
   }
-}
+};
 </script>
+
+<style scoped>
+.content {
+  background-color: #f4f6f9;
+  min-height: 100vh;
+}
+.table-responsive {
+  overflow-x: auto;
+}
+.table th,
+.table td {
+  vertical-align: middle;
+}
+.btn-sm {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.8rem;
+}
+</style>

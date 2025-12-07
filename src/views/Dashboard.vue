@@ -1,31 +1,44 @@
 <template>
   <div class="content-wrapper p-3">
-    <!-- Cards -->
-    <div class="row">
-      <div
-        class="col-lg-3 col-md-6 col-sm-12 mb-3"
-        v-for="card in cards"
-        :key="card.title"
-      >
-        <div :class="['small-box', card.bg]">
-          <div class="inner">
-            <h3>{{ card.value }}</h3>
-            <p>{{ card.title }}</p>
-          </div>
-          <div class="icon">
-            <i :class="card.icon"></i>
+    <!-- Header -->
+    <div class="content-header mb-3">
+      <div class="container-fluid">
+        <div class="row mb-2">
+          <div class="col-sm-6">
+            <h1 class="m-0">Dashboard</h1>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Chart -->
-    <div class="card mt-3">
-      <div class="card-header">
-        <h3 class="card-title">Trips Overview</h3>
+    <!-- Cards Row -->
+    <div class="container-fluid">
+      <div class="row">
+        <div
+          class="col-lg-3 col-md-6 col-sm-12 mb-3"
+          v-for="card in cards"
+          :key="card.title"
+        >
+          <div :class="['small-box', card.bg]">
+            <div class="inner">
+              <h3>{{ card.value }}</h3>
+              <p>{{ card.title }}</p>
+            </div>
+            <div class="icon">
+              <i :class="card.icon"></i>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="card-body" style="height: 300px">
-        <canvas ref="chartCanvas"></canvas>
+
+      <!-- Chart Row -->
+      <div class="card mt-3">
+        <div class="card-header">
+          <h3 class="card-title">Trips Overview</h3>
+        </div>
+        <div class="card-body chart-container">
+          <canvas ref="chartCanvas"></canvas>
+        </div>
       </div>
     </div>
   </div>
@@ -53,6 +66,7 @@ Chart.register(
 );
 
 const chartCanvas = ref(null);
+
 const cards = [
   { title: "Vehicles", value: 24, icon: "fas fa-truck", bg: "bg-info" },
   { title: "Drivers", value: 12, icon: "fas fa-user", bg: "bg-success" },
@@ -67,6 +81,7 @@ const cards = [
 
 onMounted(() => {
   if (!chartCanvas.value) return;
+
   new Chart(chartCanvas.value, {
     type: "bar",
     data: {
@@ -111,6 +126,11 @@ onMounted(() => {
   font-size: 2.5rem;
   opacity: 0.7;
 }
+
+.chart-container {
+  height: 300px;
+}
+
 .card {
   box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
   border-radius: 0.25rem;

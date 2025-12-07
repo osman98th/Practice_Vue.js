@@ -2,12 +2,12 @@
   <nav class="main-header navbar navbar-expand navbar-white navbar-light">
     <ul class="navbar-nav">
       <li class="nav-item">
-        <a class="nav-link" data-widget="pushmenu" href="#"
-          ><i class="fas fa-bars"></i
-        ></a>
+        <button class="nav-link btn" @click="$emit('toggleSidebar')">
+          <i class="fas fa-bars"></i>
+        </button>
       </li>
       <li class="nav-item d-none d-sm-inline-block">
-        <a href="#" class="nav-link">Home</a>
+        <span class="nav-link">Fleet Management</span>
       </li>
     </ul>
   </nav>
@@ -20,5 +20,9 @@
   position: fixed;
   width: 100%;
   z-index: 1000;
+}
+.nav-link.btn {
+  border: none;
+  background: transparent;
 }
 </style>

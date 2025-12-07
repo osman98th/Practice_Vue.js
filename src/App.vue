@@ -1,42 +1,70 @@
 <template>
   <div class="wrapper">
-    <Navbar />
-    <Sidebar />
-    <div class="content-wrapper">
+    <!-- Navbar -->
+    <Navbar @toggleSidebar="toggleSidebar" />
+
+    <!-- Sidebar -->
+    <Sidebar :isMobileOpen="isSidebarOpen" @closeSidebar="toggleSidebar" />
+
+    <!-- Content -->
+    <div
+      class="content-wrapper"
+      :class="{ 'sidebar-collapsed': !isSidebarOpen }"
+    >
       <router-view />
     </div>
-    <footer class="main-footer text-center">
+
+    <!-- Footer -->
+    <footer class="main-footer">
       <strong>&copy; 2025 Fleet Management.</strong> All rights reserved.
     </footer>
   </div>
 </template>
 
 <script setup>
+import { ref } from "vue";
 import Navbar from "./components/Navbar.vue";
 import Sidebar from "./components/Sidebar.vue";
+
+const isSidebarOpen = ref(true);
+
+function toggleSidebar() {
+  isSidebarOpen.value = !isSidebarOpen.value;
+}
 </script>
 
 <style>
-html,
-body,
-#app {
-  height: 100%;
-  margin: 0;
-}
 .wrapper {
   display: flex;
   flex-direction: column;
-  min-height: 100%;
+  min-height: 100vh;
 }
+
+/* Navbar, Sidebar, Footer fixed naturally by AdminLTE CSS */
 .content-wrapper {
-  flex: 1;
+  margin-left: 250px; /* Sidebar width */
   padding: 20px;
-  background-color: #f4f6f9;
-  margin-left: 250px; /* sidebar width */
+  transition: margin-left 0.3s;
+  min-height: calc(100vh - 56px - 40px); /* navbar + footer */
 }
+
+.sidebar-collapsed {
+  margin-left: 0;
+}
+
+/* Footer fixed bottom */
 .main-footer {
-  background: #343a40;
-  color: #fff;
-  padding: 10px 0;
+  background: #f8f9fa;
+  padding: 10px 20px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .content-wrapper {
+    margin-left: 0;
+    padding: 15px;
+  }
 }
 </style>

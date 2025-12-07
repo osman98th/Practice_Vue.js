@@ -1,7 +1,18 @@
 <template>
-  <aside class="main-sidebar sidebar-dark-primary elevation-4">
-    <a href="#" class="brand-link">
+  <aside
+    :class="[
+      'main-sidebar sidebar-dark-primary elevation-4',
+      { 'sidebar-mobile-open': isMobileOpen },
+    ]"
+  >
+    <a class="brand-link d-flex justify-content-between align-items-center">
       <span class="brand-text font-weight-light">Fleet Management</span>
+      <button
+        class="btn btn-sm btn-light d-md-none"
+        @click="$emit('closeSidebar')"
+      >
+        <i class="fas fa-times"></i>
+      </button>
     </a>
     <div class="sidebar">
       <nav class="mt-2">
@@ -37,10 +48,27 @@ const menuItems = [
 
 <style scoped>
 .main-sidebar {
-  width: 250px;
-  min-height: 100vh;
   position: fixed;
+  top: 0;
+  left: 0;
+  width: 250px;
+  height: 100%;
+  z-index: 999;
+  transition: transform 0.3s ease;
 }
+
+/* Mobile */
+@media (max-width: 768px) {
+  .main-sidebar {
+    transform: translateX(-100%);
+  }
+  .sidebar-mobile-open {
+    transform: translateX(0);
+    background-color: #343a40;
+  }
+}
+
+/* Active link highlight */
 .router-link-active {
   background-color: #007bff !important;
   color: #fff !important;
