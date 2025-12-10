@@ -1,76 +1,133 @@
 <template>
-  <aside
-    :class="[
-      'main-sidebar sidebar-dark-primary elevation-4',
-      { 'sidebar-mobile-open': isMobileOpen },
-    ]"
-  >
-    <a class="brand-link d-flex justify-content-between align-items-center">
-      <span class="brand-text font-weight-light">Fleet Management</span>
-      <button
-        class="btn btn-sm btn-light d-md-none"
-        @click="$emit('closeSidebar')"
-      >
-        <i class="fas fa-times"></i>
-      </button>
-    </a>
-    <div class="sidebar">
-      <nav class="mt-2">
-        <ul class="nav nav-pills nav-sidebar flex-column">
-          <li class="nav-item" v-for="item in menuItems" :key="item.name">
-            <router-link
-              :to="item.route"
-              class="nav-link"
-              active-class="active"
-            >
-              <i :class="['nav-icon', item.icon]"></i>
-              <p>{{ item.name }}</p>
-            </router-link>
-          </li>
+<div>
+    <!-- Mobile overlay -->
+    <div v-if="isOpen && isMobile" class="overlay" @click="$emit('toggleSidebar')"></div>
+
+    <aside :class="['sidebar', { open: isOpen || !isMobile }]">
+        <ul>
+            <li>
+                <router-link to="/" exact-active-class="active">Dashboard</router-link>
+            </li>
+            <li>
+                <router-link to="/vehicles" exact-active-class="active">Vehicles</router-link>
+            </li>
+            <li>
+                <router-link to="/drivers" exact-active-class="active">Drivers</router-link>
+            </li>
+            <li>
+                <router-link to="/assignment" exact-active-class="active">Assignment</router-link>
+            </li>
+            <li>
+                <router-link to="/booking" exact-active-class="active">Bookings</router-link>
+            </li>
+            <li>
+                <router-link to="/trips" exact-active-class="active">Trips</router-link>
+            </li>
+            <li>
+                <router-link to="/reports" exact-active-class="active">Reports</router-link>
+            </li>
+            <li>
+                <router-link to="/costing" exact-active-class="active">Costing</router-link>
+            </li>
+            <li>
+                <router-link to="/settings" exact-active-class="active">Settings</router-link>
+            </li>
         </ul>
-      </nav>
-    </div>
-  </aside>
+    </aside>
+</div>
 </template>
 
-<script setup>
-const menuItems = [
-  { name: "Dashboard", route: "/", icon: "fas fa-tachometer-alt" },
-  { name: "Vehicles", route: "/vehicles", icon: "fas fa-truck" },
-  { name: "Drivers", route: "/drivers", icon: "fas fa-user" },
-  { name: "Trips", route: "/trips", icon: "fas fa-route" },
-  { name: "Assignment", route: "/assignment", icon: "fas fa-random" },
-  { name: "Booking", route: "/booking", icon: "fas fa-calendar-check" },
-  { name: "Costing", route: "/costing", icon: "fas fa-dollar-sign" },
-  { name: "Reports", route: "/reports", icon: "fas fa-chart-pie" },
-];
+<script>
+export default {
+    name: "Sidebar",
+    props: {
+        isOpen: Boolean
+    },
+    data() {
+        return {
+            isMobile: false
+        };
+    },
+    methods: {
+        checkMobile() {
+            this.isMobile = window.innerWidth <= 768;
+        }
+    },
+    mounted() {
+        this.checkMobile();
+        window.addEventListener("resize", this.checkMobile);
+    },
+    beforeUnmount() {
+        window.removeEventListener("resize", this.checkMobile);
+    }
+};
 </script>
 
 <style scoped>
-.main-sidebar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 250px;
-  height: 100%;
-  z-index: 999;
-  transition: transform 0.3s ease;
-}
-
-/* Mobile */
-@media (max-width: 768px) {
-  .main-sidebar {
+.sidebar {
+    position: fixed;
+    top: 56px;
+    left: 0;
+    width: 250px;
+    height: calc(100vh - 56px);
+    background: #343a40;
+    color: white;
+    padding: 20px;
+    overflow-y: auto;
     transform: translateX(-100%);
-  }
-  .sidebar-mobile-open {
-    transform: translateX(0);
-    background-color: #343a40;
-  }
+    transition: transform 0.3s ease;
+    z-index: 1001;
 }
 
-/* Active link highlight */
-.router-link-active {
-  background-color: #007bff !important;
-  color: #fff !important;
+.sidebar.open {
+    transform: translateX(0);
+}
+
+.sidebar ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar li {
+    padding: 10px 0;
+}
+
+.sidebar li a {
+    color: white;
+    text-decoration: none;
+    display: block;
+    padding: 5px 10px;
+    border-radius: 4px;
+}
+
+.sidebar li a:hover {
+    background: #495057;
+}
+
+.active {
+    font-weight: bold;
+    background: #007bff;
+    color: white;
+}
+
+.overlay {
+    position: fixed;
+    top: 56px;
+    left: 0;
+    width: 100vw;
+    height: calc(100vh - 56px);
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 1000;
+}
+
+@media (min-width: 769px) {
+    .sidebar {
+        transform: translateX(0) !important;
+    }
+
+    .overlay {
+        display: none;
+    }
 }
 </style>

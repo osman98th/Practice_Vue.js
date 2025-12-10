@@ -1,233 +1,163 @@
 <template>
-  <div class="content pt-3">
+<div class="content pt-3">
     <div class="container-fluid">
-      <!-- Card -->
-      <div class="card">
-        <div
-          class="card-header d-flex flex-wrap justify-content-between align-items-center"
-        >
-          <h3 class="card-title mb-2">Reports</h3>
-
-          <!-- Filters & Actions -->
-          <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
-            <input
-              type="text"
-              v-model="search"
-              placeholder="Search Trip/Driver/Vehicle"
-              class="form-control form-control-sm"
-            />
-            <input
-              type="date"
-              v-model="fromDate"
-              class="form-control form-control-sm"
-            />
-            <input
-              type="date"
-              v-model="toDate"
-              class="form-control form-control-sm"
-            />
-            <button class="btn btn-success btn-sm" @click="printInvoice">
-              <i class="fas fa-print"></i> Print
-            </button>
-            <button class="btn btn-primary btn-sm" @click="downloadPDF">
-              <i class="fas fa-file-pdf"></i> PDF
-            </button>
-          </div>
-        </div>
-
-        <div class="card-body" ref="reportContent">
-          <!-- Invoice Header -->
-          <div class="invoice-header text-center mb-3">
-            <h2>Fleet Management Institute</h2>
-            <p>123 Street, City, Country | Email: info@fleet.com</p>
-            <hr />
-          </div>
-
-          <!-- Table -->
-          <div class="table-responsive">
-            <table class="table table-bordered">
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Trip</th>
-                  <th>Vehicle</th>
-                  <th>Driver</th>
-                  <th>Status</th>
-                  <th>Cost</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="report in filteredReports" :key="report.id">
-                  <td>{{ report.id }}</td>
-                  <td>{{ report.trip }}</td>
-                  <td>{{ report.vehicle }}</td>
-                  <td>{{ report.driver }}</td>
-                  <td>
-                    <span
-                      :class="
-                        report.status === 'Completed'
-                          ? 'badge bg-success'
-                          : 'badge bg-warning'
-                      "
-                    >
-                      {{ report.status }}
-                    </span>
-                  </td>
-                  <td>${{ report.cost }}</td>
-                </tr>
-                <tr v-if="filteredReports.length === 0">
-                  <td colspan="6" class="text-center">No reports found.</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <!-- Totals & Barcode -->
-          <div
-            class="d-flex justify-content-between mt-4 align-items-center flex-wrap gap-3"
-          >
-            <div>
-              <p><strong>Total Trips:</strong> {{ filteredReports.length }}</p>
-              <p><strong>Total Cost:</strong> ${{ totalCost }}</p>
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h3 class="card-title">Reports</h3>
+                <button class="btn btn-primary btn-sm" @click="openModal">Add Report</button>
             </div>
-            <div>
-              <svg ref="barcode"></svg>
+
+            <!-- Modal -->
+            <div v-if="showModal" class="modal-backdrop">
+                <div class="modal-box">
+                    <h5>{{ isEdit ? "Edit Report" : "Add Report" }}</h5>
+
+                    <div class="mb-2">
+                        <label>Report Name</label>
+                        <input type="text" v-model="form.name" class="form-control" />
+                    </div>
+                    <div class="mb-2">
+                        <label>Description</label>
+                        <input type="text" v-model="form.description" class="form-control" />
+                    </div>
+                    <div class="mb-2">
+                        <label>Date</label>
+                        <input type="date" v-model="form.date" class="form-control" />
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 mt-2">
+                        <button class="btn btn-secondary btn-sm" @click="closeModal">Cancel</button>
+                        <button class="btn btn-success btn-sm" @click="saveReport">
+                            {{ isEdit ? "Update" : "Add" }}
+                        </button>
+                    </div>
+                </div>
             </div>
-          </div>
+
+            <!-- Table -->
+            <div class="card-body table-responsive mt-3">
+                <table class="table table-bordered table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Report Name</th>
+                            <th>Description</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="r in reports" :key="r.id">
+                            <td>{{ r.id }}</td>
+                            <td>{{ r.name }}</td>
+                            <td>{{ r.description }}</td>
+                            <td>{{ r.date }}</td>
+                            <td>
+                                <button class="btn btn-sm btn-info me-1" @click="editReport(r)">Edit</button>
+                                <button class="btn btn-sm btn-danger" @click="deleteReport(r.id)">Delete</button>
+                            </td>
+                        </tr>
+                        <tr v-if="reports.length === 0">
+                            <td colspan="5" class="text-center">No reports found.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
         </div>
-      </div>
     </div>
-  </div>
+</div>
 </template>
 
-<script setup>
-import { ref, onMounted, computed } from "vue";
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
-import JsBarcode from "jsbarcode";
-
-// Sample reports
-const reports = ref([
-  {
-    id: 1,
-    trip: "Trip 1",
-    vehicle: "Truck 1",
-    driver: "John Doe",
-    status: "Completed",
-    cost: 120,
-    date: "2025-12-01",
-  },
-  {
-    id: 2,
-    trip: "Trip 2",
-    vehicle: "Car 1",
-    driver: "Jane Smith",
-    status: "Pending",
-    cost: 50,
-    date: "2025-12-03",
-  },
-  {
-    id: 3,
-    trip: "Trip 3",
-    vehicle: "Microbus",
-    driver: "Ali Khan",
-    status: "Completed",
-    cost: 75,
-    date: "2025-12-05",
-  },
-]);
-
-const reportContent = ref(null);
-const barcode = ref(null);
-
-const search = ref("");
-const fromDate = ref("");
-const toDate = ref("");
-
-// Filter reports
-const filteredReports = computed(() => {
-  return reports.value.filter((r) => {
-    const matchesSearch =
-      r.trip.toLowerCase().includes(search.value.toLowerCase()) ||
-      r.driver.toLowerCase().includes(search.value.toLowerCase()) ||
-      r.vehicle.toLowerCase().includes(search.value.toLowerCase());
-
-    const matchesFromDate = fromDate.value
-      ? new Date(r.date) >= new Date(fromDate.value)
-      : true;
-    const matchesToDate = toDate.value
-      ? new Date(r.date) <= new Date(toDate.value)
-      : true;
-
-    return matchesSearch && matchesFromDate && matchesToDate;
-  });
-});
-
-const totalCost = computed(() =>
-  filteredReports.value.reduce((sum, r) => sum + r.cost, 0)
-);
-
-// Barcode
-onMounted(() => {
-  if (barcode.value) {
-    JsBarcode(barcode.value, "FM-INV-2025", {
-      format: "CODE128",
-      width: 2,
-      height: 40,
-      displayValue: true,
-    });
-  }
-});
-
-// Print
-const printInvoice = () => {
-  const printContents = reportContent.value.innerHTML;
-  const originalContents = document.body.innerHTML;
-  document.body.innerHTML = `<div style="margin:20px">${printContents}</div>`;
-  window.print();
-  document.body.innerHTML = originalContents;
-  window.location.reload();
-};
-
-// PDF
-const downloadPDF = async () => {
-  const canvas = await html2canvas(reportContent.value, { scale: 2 });
-  const imgData = canvas.toDataURL("image/png");
-  const pdf = new jsPDF("p", "mm", "a4");
-  const pdfWidth = pdf.internal.pageSize.getWidth();
-  const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-  pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-  pdf.save("invoice.pdf");
+<script>
+export default {
+    name: "Reports",
+    data() {
+        return {
+            reports: [{
+                id: 1,
+                name: 'Monthly Report',
+                description: 'December 2025',
+                date: '2025-12-10'
+            }],
+            showModal: false,
+            isEdit: false,
+            form: {
+                id: null,
+                name: '',
+                description: '',
+                date: ''
+            }
+        };
+    },
+    methods: {
+        openModal() {
+            this.isEdit = false;
+            this.form = {
+                id: null,
+                name: '',
+                description: '',
+                date: ''
+            };
+            this.showModal = true;
+        },
+        closeModal() {
+            this.showModal = false;
+        },
+        saveReport() {
+            if (!this.form.name || !this.form.description || !this.form.date) {
+                alert('Fill all fields!');
+                return;
+            }
+            if (this.isEdit) {
+                const index = this.reports.findIndex(r => r.id === this.form.id);
+                if (index !== -1) this.reports.splice(index, 1, {
+                    ...this.form
+                });
+            } else {
+                this.reports.push({
+                    ...this.form,
+                    id: this.reports.length + 1
+                });
+            }
+            this.closeModal();
+        },
+        editReport(r) {
+            this.form = {
+                ...r
+            };
+            this.isEdit = true;
+            this.showModal = true;
+        },
+        deleteReport(id) {
+            if (confirm(`Delete report #${id}?`)) {
+                this.reports = this.reports.filter(r => r.id !== id);
+            }
+        }
+    }
 };
 </script>
 
 <style scoped>
-.content {
-  background-color: #f4f6f9;
-  min-height: 100vh;
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1050;
 }
-.table-responsive {
-  overflow-x: auto;
+
+.modal-box {
+    background: #fff;
+    padding: 20px;
+    width: 400px;
+    border-radius: 8px;
 }
+
 .table th,
 .table td {
-  vertical-align: middle;
-}
-.badge {
-  padding: 0.5em;
-  font-size: 0.9rem;
-}
-.btn-sm {
-  padding: 0.25rem 0.5rem;
-  font-size: 0.8rem;
-}
-.invoice-header h2 {
-  margin: 0;
-  font-weight: 600;
-}
-.invoice-header p {
-  margin: 0;
-  font-size: 0.9rem;
-  color: #555;
+    vertical-align: middle;
 }
 </style>

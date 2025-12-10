@@ -3,18 +3,18 @@
     <div class="container-fluid">
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h3 class="card-title">Trips</h3>
-                <button class="btn btn-primary btn-sm" @click="openModal">Add Trip</button>
+                <h3 class="card-title">Bookings</h3>
+                <button class="btn btn-primary btn-sm" @click="openModal">Add Booking</button>
             </div>
 
             <!-- Modal -->
             <div v-if="showModal" class="modal-backdrop">
                 <div class="modal-box">
-                    <h5>{{ isEdit ? "Edit Trip" : "Add Trip" }}</h5>
+                    <h5>{{ isEdit ? "Edit Booking" : "Add Booking" }}</h5>
 
                     <div class="mb-2">
-                        <label>Trip Name</label>
-                        <input type="text" v-model="form.name" class="form-control" />
+                        <label>Customer Name</label>
+                        <input type="text" v-model="form.customer" class="form-control" />
                     </div>
                     <div class="mb-2">
                         <label>Vehicle</label>
@@ -25,25 +25,21 @@
                         <input type="text" v-model="form.driver" class="form-control" />
                     </div>
                     <div class="mb-2">
-                        <label>Start Date</label>
-                        <input type="date" v-model="form.start" class="form-control" />
-                    </div>
-                    <div class="mb-2">
-                        <label>End Date</label>
-                        <input type="date" v-model="form.end" class="form-control" />
+                        <label>Date</label>
+                        <input type="date" v-model="form.date" class="form-control" />
                     </div>
                     <div class="mb-2">
                         <label>Status</label>
                         <select v-model="form.status" class="form-select">
-                            <option>Planned</option>
-                            <option>Ongoing</option>
-                            <option>Completed</option>
+                            <option>Confirmed</option>
+                            <option>Pending</option>
+                            <option>Cancelled</option>
                         </select>
                     </div>
 
                     <div class="d-flex justify-content-end gap-2 mt-2">
                         <button class="btn btn-secondary btn-sm" @click="closeModal">Cancel</button>
-                        <button class="btn btn-success btn-sm" @click="saveTrip">
+                        <button class="btn btn-success btn-sm" @click="saveBooking">
                             {{ isEdit ? "Update" : "Add" }}
                         </button>
                     </div>
@@ -56,33 +52,31 @@
                     <thead>
                         <tr>
                             <th>ID</th>
-                            <th>Trip Name</th>
+                            <th>Customer</th>
                             <th>Vehicle</th>
                             <th>Driver</th>
-                            <th>Start</th>
-                            <th>End</th>
+                            <th>Date</th>
                             <th>Status</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="t in trips" :key="t.id">
-                            <td>{{ t.id }}</td>
-                            <td>{{ t.name }}</td>
-                            <td>{{ t.vehicle }}</td>
-                            <td>{{ t.driver }}</td>
-                            <td>{{ t.start }}</td>
-                            <td>{{ t.end }}</td>
+                        <tr v-for="b in bookings" :key="b.id">
+                            <td>{{ b.id }}</td>
+                            <td>{{ b.customer }}</td>
+                            <td>{{ b.vehicle }}</td>
+                            <td>{{ b.driver }}</td>
+                            <td>{{ b.date }}</td>
                             <td>
-                                <span :class="t.status==='Completed' ? 'badge bg-success' : 'badge bg-warning'">{{ t.status }}</span>
+                                <span :class="b.status==='Confirmed' ? 'badge bg-success' : 'badge bg-warning'">{{ b.status }}</span>
                             </td>
                             <td>
-                                <button class="btn btn-sm btn-info me-1" @click="editTrip(t)">Edit</button>
-                                <button class="btn btn-sm btn-danger" @click="deleteTrip(t.id)">Delete</button>
+                                <button class="btn btn-sm btn-info me-1" @click="editBooking(b)">Edit</button>
+                                <button class="btn btn-sm btn-danger" @click="deleteBooking(b.id)">Delete</button>
                             </td>
                         </tr>
-                        <tr v-if="trips.length === 0">
-                            <td colspan="8" class="text-center">No trips found.</td>
+                        <tr v-if="bookings.length === 0">
+                            <td colspan="7" class="text-center">No bookings found.</td>
                         </tr>
                     </tbody>
                 </table>
@@ -95,38 +89,35 @@
 
 <script>
 export default {
-    name: "Trips",
+    name: "Bookings",
     data() {
         return {
-            trips: [{
+            bookings: [{
                     id: 1,
-                    name: 'Trip 1',
+                    customer: 'Osman Goni',
                     vehicle: 'Truck 1',
                     driver: 'John Doe',
-                    start: '2025-12-10',
-                    end: '2025-12-12',
-                    status: 'Planned'
+                    date: '2025-12-10',
+                    status: 'Confirmed'
                 },
                 {
                     id: 2,
-                    name: 'Trip 2',
+                    customer: 'Sara Khan',
                     vehicle: 'Car 1',
                     driver: 'Jane Smith',
-                    start: '2025-12-15',
-                    end: '2025-12-18',
-                    status: 'Ongoing'
+                    date: '2025-12-12',
+                    status: 'Pending'
                 }
             ],
             showModal: false,
             isEdit: false,
             form: {
                 id: null,
-                name: '',
+                customer: '',
                 vehicle: '',
                 driver: '',
-                start: '',
-                end: '',
-                status: 'Planned'
+                date: '',
+                status: 'Confirmed'
             }
         };
     },
@@ -135,46 +126,45 @@ export default {
             this.isEdit = false;
             this.form = {
                 id: null,
-                name: '',
+                customer: '',
                 vehicle: '',
                 driver: '',
-                start: '',
-                end: '',
-                status: 'Planned'
+                date: '',
+                status: 'Confirmed'
             };
             this.showModal = true;
         },
         closeModal() {
             this.showModal = false;
         },
-        saveTrip() {
-            if (!this.form.name || !this.form.vehicle || !this.form.driver || !this.form.start || !this.form.end) {
+        saveBooking() {
+            if (!this.form.customer || !this.form.vehicle || !this.form.driver || !this.form.date) {
                 alert('Fill all fields!');
                 return;
             }
             if (this.isEdit) {
-                const index = this.trips.findIndex(t => t.id === this.form.id);
-                if (index !== -1) this.trips.splice(index, 1, {
+                const index = this.bookings.findIndex(b => b.id === this.form.id);
+                if (index !== -1) this.bookings.splice(index, 1, {
                     ...this.form
                 });
             } else {
-                this.trips.push({
+                this.bookings.push({
                     ...this.form,
-                    id: this.trips.length + 1
+                    id: this.bookings.length + 1
                 });
             }
             this.closeModal();
         },
-        editTrip(t) {
+        editBooking(b) {
             this.form = {
-                ...t
+                ...b
             };
             this.isEdit = true;
             this.showModal = true;
         },
-        deleteTrip(id) {
-            if (confirm(`Delete trip #${id}?`)) {
-                this.trips = this.trips.filter(t => t.id !== id);
+        deleteBooking(id) {
+            if (confirm(`Delete booking #${id}?`)) {
+                this.bookings = this.bookings.filter(b => b.id !== id);
             }
         }
     }
