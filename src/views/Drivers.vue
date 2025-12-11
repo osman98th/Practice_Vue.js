@@ -16,14 +16,17 @@
                         <label>Name</label>
                         <input type="text" v-model="form.name" class="form-control" />
                     </div>
+
                     <div class="mb-2">
                         <label>License No</label>
                         <input type="text" v-model="form.license" class="form-control" />
                     </div>
+
                     <div class="mb-2">
                         <label>Phone</label>
                         <input type="text" v-model="form.phone" class="form-control" />
                     </div>
+
                     <div class="mb-2">
                         <label>Status</label>
                         <select v-model="form.status" class="form-select">
@@ -61,9 +64,7 @@
                             <td>{{ d.license }}</td>
                             <td>{{ d.phone }}</td>
                             <td>
-                                <span :class="d.status==='Active' ? 'badge bg-success' : 'badge bg-secondary'">
-                                    {{ d.status }}
-                                </span>
+                                <span :class="d.status==='Active'?'badge bg-success':'badge bg-secondary'">{{d.status}}</span>
                             </td>
                             <td>
                                 <button class="btn btn-sm btn-info me-1" @click="editDriver(d)">Edit</button>
@@ -87,21 +88,7 @@ export default {
     name: "Drivers",
     data() {
         return {
-            drivers: [{
-                    id: 1,
-                    name: 'John Doe',
-                    license: 'DL-12345',
-                    phone: '01712345678',
-                    status: 'Active'
-                },
-                {
-                    id: 2,
-                    name: 'Jane Smith',
-                    license: 'DL-67890',
-                    phone: '01887654321',
-                    status: 'Active'
-                },
-            ],
+            drivers: JSON.parse(localStorage.getItem('drivers')) || [],
             showModal: false,
             isEdit: false,
             form: {
@@ -111,7 +98,7 @@ export default {
                 phone: '',
                 status: 'Active'
             }
-        };
+        }
     },
     methods: {
         openModal() {
@@ -134,16 +121,18 @@ export default {
                 return;
             }
             if (this.isEdit) {
-                const index = this.drivers.findIndex(d => d.id === this.form.id);
-                if (index !== -1) this.drivers.splice(index, 1, {
+                const idx = this.drivers.findIndex(d => d.id === this.form.id);
+                if (idx !== -1) this.drivers.splice(idx, 1, {
                     ...this.form
                 });
             } else {
+                const id = this.drivers.length ? Math.max(...this.drivers.map(d => d.id)) + 1 : 1;
                 this.drivers.push({
                     ...this.form,
-                    id: this.drivers.length + 1
+                    id
                 });
             }
+            localStorage.setItem('drivers', JSON.stringify(this.drivers));
             this.closeModal();
         },
         editDriver(d) {
@@ -156,10 +145,11 @@ export default {
         deleteDriver(id) {
             if (confirm(`Delete driver #${id}?`)) {
                 this.drivers = this.drivers.filter(d => d.id !== id);
+                localStorage.setItem('drivers', JSON.stringify(this.drivers));
             }
         }
     }
-};
+}
 </script>
 
 <style scoped>
@@ -180,13 +170,13 @@ export default {
     border-radius: 8px;
 }
 
-.badge {
-    padding: 0.4em;
-    font-size: 0.85rem;
-}
-
 .table th,
 .table td {
     vertical-align: middle;
+}
+
+.badge {
+    padding: 0.4em;
+    font-size: 0.85rem;
 }
 </style>

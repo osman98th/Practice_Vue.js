@@ -3,30 +3,35 @@
     <div class="container-fluid">
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h3 class="card-title">Assignment</h3>
-                <button class="btn btn-primary btn-sm" @click="openModal">Add Assignment</button>
+                <h3 class="card-title">Assignments</h3>
+                <button class="btn btn-primary btn-sm" @click="openModal">Assign Vehicle</button>
             </div>
 
             <!-- Modal -->
             <div v-if="showModal" class="modal-backdrop">
                 <div class="modal-box">
-                    <h5>{{ isEdit ? 'Edit Assignment' : 'Add Assignment' }}</h5>
+                    <h5>{{ isEdit ? "Edit Assignment" : "Assign Vehicle to Driver" }}</h5>
+
                     <div class="mb-2">
                         <label>Vehicle</label>
-                        <input type="text" v-model="form.vehicle" class="form-control" />
+                        <select v-model="form.vehicle_id" class="form-select">
+                            <option disabled value="">Select Vehicle</option>
+                            <option v-for="v in vehicles" :key="v.id" :value="v.id">{{v.id}} — {{v.name}}</option>
+                        </select>
                     </div>
+
                     <div class="mb-2">
                         <label>Driver</label>
-                        <input type="text" v-model="form.driver" class="form-control" />
+                        <select v-model="form.driver_id" class="form-select">
+                            <option disabled value="">Select Driver</option>
+                            <option v-for="d in drivers" :key="d.id" :value="d.id">{{d.id}} — {{d.name}}</option>
+                        </select>
                     </div>
-                    <div class="mb-2">
-                        <label>Date</label>
-                        <input type="date" v-model="form.date" class="form-control" />
-                    </div>
+
                     <div class="d-flex justify-content-end gap-2 mt-2">
                         <button class="btn btn-secondary btn-sm" @click="closeModal">Cancel</button>
                         <button class="btn btn-success btn-sm" @click="saveAssignment">
-                            {{ isEdit ? 'Update' : 'Add' }}
+                            {{ isEdit ? "Update" : "Assign" }}
                         </button>
                     </div>
                 </div>
@@ -40,23 +45,21 @@
                             <th>ID</th>
                             <th>Vehicle</th>
                             <th>Driver</th>
-                            <th>Date</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr v-for="a in assignments" :key="a.id">
                             <td>{{ a.id }}</td>
-                            <td>{{ a.vehicle }}</td>
-                            <td>{{ a.driver }}</td>
-                            <td>{{ a.date }}</td>
+                            <td>{{ getVehicleName(a.vehicle_id) }}</td>
+                            <td>{{ getDriverName(a.driver_id) }}</td>
                             <td>
                                 <button class="btn btn-sm btn-info me-1" @click="editAssignment(a)">Edit</button>
                                 <button class="btn btn-sm btn-danger" @click="deleteAssignment(a.id)">Delete</button>
                             </td>
                         </tr>
-                        <tr v-if="assignments.length === 0">
-                            <td colspan="5" class="text-center">No assignments found.</td>
+                        <tr v-if="assignments.length===0">
+                            <td colspan="4" class="text-center">No assignments yet.</td>
                         </tr>
                     </tbody>
                 </table>
@@ -69,57 +72,73 @@
 
 <script>
 export default {
-    name: "Assignment",
+    name: "Assignments",
     data() {
         return {
-            assignments: [{
-                id: 1,
-                vehicle: 'Truck 1',
-                driver: 'John Doe',
-                date: '2025-12-10'
-            }],
+            vehicles: JSON.parse(localStorage.getItem('vehicles')) || [],
+            drivers: JSON.parse(localStorage.getItem('drivers')) || [],
+            assignments: JSON.parse(localStorage.getItem('assignments')) || [],
             showModal: false,
             isEdit: false,
             form: {
                 id: null,
-                vehicle: '',
-                driver: '',
-                date: ''
+                vehicle_id: '',
+                driver_id: ''
             }
-        };
+        }
     },
     methods: {
         openModal() {
             this.isEdit = false;
             this.form = {
                 id: null,
-                vehicle: '',
-                driver: '',
-                date: ''
+                vehicle_id: '',
+                driver_id: ''
             };
             this.showModal = true;
         },
         closeModal() {
             this.showModal = false;
         },
+
         saveAssignment() {
-            if (!this.form.vehicle || !this.form.driver || !this.form.date) {
-                alert('Fill all fields!');
+            if (!this.form.vehicle_id || !this.form.driver_id) {
+                alert('Select both vehicle & driver');
                 return;
             }
+
+            // Prevent duplicate vehicle assignment
+            if (!this.isEdit) {
+                const exists = this.assignments.find(a => a.vehicle_id === this.form.vehicle_id);
+                if (exists) {
+                    alert('Vehicle already assigned');
+                    return;
+                }
+            } else {
+                const exists = this.assignments.find(a => a.vehicle_id === this.form.vehicle_id && a.id !== this.form.id);
+                if (exists) {
+                    alert('Vehicle already assigned');
+                    return;
+                }
+            }
+
             if (this.isEdit) {
-                const index = this.assignments.findIndex(a => a.id === this.form.id);
-                if (index !== -1) this.assignments.splice(index, 1, {
+                const idx = this.assignments.findIndex(a => a.id === this.form.id);
+                if (idx !== -1) this.assignments.splice(idx, 1, {
                     ...this.form
                 });
             } else {
+                const id = this.assignments.length ? Math.max(...this.assignments.map(a => a.id)) + 1 : 1;
                 this.assignments.push({
                     ...this.form,
-                    id: this.assignments.length + 1
+                    id
                 });
             }
-            this.closeModal();
+
+            localStorage.setItem('assignments', JSON.stringify(this.assignments));
+            this.showModal = false;
         },
+
         editAssignment(a) {
             this.form = {
                 ...a
@@ -127,13 +146,24 @@ export default {
             this.isEdit = true;
             this.showModal = true;
         },
+
         deleteAssignment(id) {
             if (confirm(`Delete assignment #${id}?`)) {
                 this.assignments = this.assignments.filter(a => a.id !== id);
+                localStorage.setItem('assignments', JSON.stringify(this.assignments));
             }
+        },
+
+        getVehicleName(id) {
+            const v = this.vehicles.find(v => v.id === id);
+            return v ? v.name : 'Unknown';
+        },
+        getDriverName(id) {
+            const d = this.drivers.find(d => d.id === id);
+            return d ? d.name : 'Unknown';
         }
     }
-};
+}
 </script>
 
 <style scoped>

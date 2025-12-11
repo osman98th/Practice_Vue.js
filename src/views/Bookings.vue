@@ -13,28 +13,18 @@
                     <h5>{{ isEdit ? "Edit Booking" : "Add Booking" }}</h5>
 
                     <div class="mb-2">
-                        <label>Customer Name</label>
-                        <input type="text" v-model="form.customer" class="form-control" />
-                    </div>
-                    <div class="mb-2">
-                        <label>Vehicle</label>
-                        <input type="text" v-model="form.vehicle" class="form-control" />
-                    </div>
-                    <div class="mb-2">
-                        <label>Driver</label>
-                        <input type="text" v-model="form.driver" class="form-control" />
-                    </div>
-                    <div class="mb-2">
-                        <label>Date</label>
-                        <input type="date" v-model="form.date" class="form-control" />
-                    </div>
-                    <div class="mb-2">
-                        <label>Status</label>
-                        <select v-model="form.status" class="form-select">
-                            <option>Confirmed</option>
-                            <option>Pending</option>
-                            <option>Cancelled</option>
+                        <label>Assignment (Vehicle + Driver)</label>
+                        <select v-model="form.assignment_id" class="form-select">
+                            <option disabled value="">Select Assignment</option>
+                            <option v-for="a in assignments" :key="a.id" :value="a.id">
+                                {{ getVehicleName(a.vehicle_id) }} — {{ getDriverName(a.driver_id) }}
+                            </option>
                         </select>
+                    </div>
+
+                    <div class="mb-2">
+                        <label>Booking Date</label>
+                        <input type="date" v-model="form.date" class="form-control" />
                     </div>
 
                     <div class="d-flex justify-content-end gap-2 mt-2">
@@ -52,31 +42,26 @@
                     <thead>
                         <tr>
                             <th>ID</th>
-                            <th>Customer</th>
                             <th>Vehicle</th>
                             <th>Driver</th>
                             <th>Date</th>
-                            <th>Status</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr v-for="b in bookings" :key="b.id">
                             <td>{{ b.id }}</td>
-                            <td>{{ b.customer }}</td>
-                            <td>{{ b.vehicle }}</td>
-                            <td>{{ b.driver }}</td>
+                            <td>{{ getVehicleName(getAssignment(b.assignment_id)?.vehicle_id) }}</td>
+                            <td>{{ getDriverName(getAssignment(b.assignment_id)?.driver_id) }}</td>
                             <td>{{ b.date }}</td>
                             <td>
-                                <span :class="b.status==='Confirmed' ? 'badge bg-success' : 'badge bg-warning'">{{ b.status }}</span>
-                            </td>
-                            <td>
                                 <button class="btn btn-sm btn-info me-1" @click="editBooking(b)">Edit</button>
-                                <button class="btn btn-sm btn-danger" @click="deleteBooking(b.id)">Delete</button>
+                                <button class="btn btn-sm btn-danger me-1" @click="deleteBooking(b.id)">Delete</button>
+                                <button class="btn btn-sm btn-warning" @click="downloadInvoice(b)">Invoice</button>
                             </td>
                         </tr>
-                        <tr v-if="bookings.length === 0">
-                            <td colspan="7" class="text-center">No bookings found.</td>
+                        <tr v-if="bookings.length===0">
+                            <td colspan="5" class="text-center">No bookings yet.</td>
                         </tr>
                     </tbody>
                 </table>
@@ -88,87 +73,96 @@
 </template>
 
 <script>
+import jsPDF from "jspdf";
+
 export default {
     name: "Bookings",
     data() {
         return {
-            bookings: [{
-                    id: 1,
-                    customer: 'Osman Goni',
-                    vehicle: 'Truck 1',
-                    driver: 'John Doe',
-                    date: '2025-12-10',
-                    status: 'Confirmed'
-                },
-                {
-                    id: 2,
-                    customer: 'Sara Khan',
-                    vehicle: 'Car 1',
-                    driver: 'Jane Smith',
-                    date: '2025-12-12',
-                    status: 'Pending'
-                }
-            ],
+            assignments: JSON.parse(localStorage.getItem('assignments')) || [],
+            vehicles: JSON.parse(localStorage.getItem('vehicles')) || [],
+            drivers: JSON.parse(localStorage.getItem('drivers')) || [],
+            bookings: JSON.parse(localStorage.getItem('bookings')) || [],
             showModal: false,
             isEdit: false,
             form: {
                 id: null,
-                customer: '',
-                vehicle: '',
-                driver: '',
-                date: '',
-                status: 'Confirmed'
+                assignment_id: '',
+                date: ''
             }
-        };
+        }
     },
     methods: {
         openModal() {
             this.isEdit = false;
-            this.form = {
-                id: null,
-                customer: '',
-                vehicle: '',
-                driver: '',
-                date: '',
-                status: 'Confirmed'
-            };
+            this.form = { id: null, assignment_id: '', date: '' };
             this.showModal = true;
         },
         closeModal() {
             this.showModal = false;
         },
         saveBooking() {
-            if (!this.form.customer || !this.form.vehicle || !this.form.driver || !this.form.date) {
-                alert('Fill all fields!');
+            if (!this.form.assignment_id || !this.form.date) {
+                alert('Select assignment and date');
                 return;
             }
+
             if (this.isEdit) {
-                const index = this.bookings.findIndex(b => b.id === this.form.id);
-                if (index !== -1) this.bookings.splice(index, 1, {
-                    ...this.form
-                });
+                const idx = this.bookings.findIndex(b => b.id === this.form.id);
+                if (idx !== -1) this.bookings.splice(idx, 1, { ...this.form });
             } else {
-                this.bookings.push({
-                    ...this.form,
-                    id: this.bookings.length + 1
-                });
+                const id = this.bookings.length ? Math.max(...this.bookings.map(b => b.id)) + 1 : 1;
+                this.bookings.push({ ...this.form, id });
             }
-            this.closeModal();
+
+            localStorage.setItem('bookings', JSON.stringify(this.bookings));
+            this.showModal = false;
         },
         editBooking(b) {
-            this.form = {
-                ...b
-            };
+            this.form = { ...b };
             this.isEdit = true;
             this.showModal = true;
         },
         deleteBooking(id) {
             if (confirm(`Delete booking #${id}?`)) {
                 this.bookings = this.bookings.filter(b => b.id !== id);
+                localStorage.setItem('bookings', JSON.stringify(this.bookings));
             }
+        },
+        getAssignment(id) {
+            return this.assignments.find(a => a.id === id);
+        },
+        getVehicleName(id) {
+            const v = this.vehicles.find(v => v.id === id);
+            return v ? v.name : 'Unknown';
+        },
+        getDriverName(id) {
+            const d = this.drivers.find(d => d.id === id);
+            return d ? d.name : 'Unknown';
+        },
+
+        // Invoice PDF generate
+        downloadInvoice(booking) {
+            const doc = new jsPDF();
+            const assignment = this.getAssignment(booking.assignment_id);
+            const vehicleName = this.getVehicleName(assignment?.vehicle_id);
+            const driverName = this.getDriverName(assignment?.driver_id);
+
+            doc.setFontSize(16);
+            doc.text("Booking Invoice", 20, 20);
+            doc.setFontSize(12);
+            doc.text(`Booking ID: ${booking.id}`, 20, 40);
+            doc.text(`Date: ${booking.date}`, 20, 50);
+            doc.text(`Vehicle: ${vehicleName}`, 20, 60);
+            doc.text(`Driver: ${driverName}`, 20, 70);
+
+            // Optional: Cost or other details can be added
+            // doc.text(`Cost: $100`, 20, 80);
+
+            doc.save(`Booking_Invoice_${booking.id}.pdf`);
         }
     }
-};
+}
 </script>
 
 <style scoped>
@@ -181,19 +175,12 @@ export default {
     align-items: center;
     z-index: 1050;
 }
-
 .modal-box {
     background: #fff;
     padding: 20px;
     width: 400px;
     border-radius: 8px;
 }
-
-.badge {
-    padding: 0.4em;
-    font-size: 0.85rem;
-}
-
 .table th,
 .table td {
     vertical-align: middle;

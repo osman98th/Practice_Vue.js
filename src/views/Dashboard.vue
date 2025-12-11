@@ -1,22 +1,11 @@
 <template>
 <div class="d-flex" style="min-height: 100vh;">
-    <!-- Sidebar -->
-    <nav class="bg-light border-end vh-100" style="width: 250px;">
-        <div class="sidebar-header p-3 border-bottom">
-            <h5 class="m-0">Fleet Manager</h5>
+
+    <!-- Sidebar (Only Circle Content) -->
+    <nav class="bg-light border-end vh-100 d-flex flex-column align-items-center justify-content-start pt-4" style="width: 250px;">
+        <div class="circle-box d-flex align-items-center justify-content-center mb-3">
+            <span class="circle-text">FM</span>
         </div>
-        <ul class="nav flex-column p-2">
-            <li class="nav-item mb-1">
-                <a class="nav-link active" href="#">Dashboard</a>
-            </li>
-            <li class="nav-item mb-1"><a class="nav-link" href="#">Vehicles</a></li>
-            <li class="nav-item mb-1"><a class="nav-link" href="#">Drivers</a></li>
-            <li class="nav-item mb-1"><a class="nav-link" href="#">Assignments</a></li>
-            <li class="nav-item mb-1"><a class="nav-link" href="#">Bookings</a></li>
-            <li class="nav-item mb-1"><a class="nav-link" href="#">Trips</a></li>
-            <li class="nav-item mb-1"><a class="nav-link" href="#">Reports</a></li>
-            <li class="nav-item mb-1"><a class="nav-link" href="#">Costing</a></li>
-        </ul>
     </nav>
 
     <!-- Main content -->
@@ -119,8 +108,8 @@
                         </div>
                     </div>
                 </div>
-            </div>
 
+            </div>
         </div>
     </div>
 </div>
@@ -143,128 +132,120 @@ import {
 
 Chart.register(BarController, BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 
-const kpiCards = [{
-        title: 'Vehicles',
-        value: 120,
-        bg: 'bg-primary'
-    },
-    {
-        title: 'Drivers',
-        value: 65,
-        bg: 'bg-success'
-    },
-    {
-        title: 'Trips',
-        value: 42,
-        bg: 'bg-warning'
-    },
-    {
-        title: 'Bookings',
-        value: 18,
-        bg: 'bg-danger'
-    },
-];
-
-const vehicles = [{
-        id: 1,
-        name: 'Truck 1',
-        type: 'Truck',
-        status: 'Active'
-    },
-    {
-        id: 2,
-        name: 'Car 1',
-        type: 'Car',
-        status: 'Active'
-    },
-    {
-        id: 3,
-        name: 'Van 1',
-        type: 'Van',
-        status: 'Maintenance'
-    },
-];
-
-const drivers = [{
-        id: 1,
-        name: 'John Doe',
-        license: 'ABC123',
-        status: 'Active'
-    },
-    {
-        id: 2,
-        name: 'Jane Smith',
-        license: 'XYZ456',
-        status: 'Active'
-    },
-    {
-        id: 3,
-        name: 'Mike Ross',
-        license: 'LMN789',
-        status: 'On Leave'
-    },
-];
-
-const tripsChart = ref(null);
-const costChart = ref(null);
-
-onMounted(() => {
-    new Chart(tripsChart.value, {
-        type: 'bar',
-        data: {
-            labels: ['Bus', 'Car', 'Micro', 'Ambulance'],
-            datasets: [{
-                label: 'Trips Completed',
-                data: [12, 19, 7, 14],
-                backgroundColor: '#0d6efd'
-            }],
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    display: true
-                }
+export default {
+    setup() {
+        const kpiCards = ref([{
+                title: 'Vehicles',
+                value: 120,
+                bg: 'bg-primary'
             },
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
-            }
-        },
-    });
-
-    new Chart(costChart.value, {
-        type: 'bar',
-        data: {
-            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
-            datasets: [{
-                    label: 'Fuel',
-                    data: [12, 19, 7, 14, 10],
-                    backgroundColor: '#198754'
-                },
-                {
-                    label: 'Maintenance',
-                    data: [8, 14, 6, 12, 9],
-                    backgroundColor: '#dc3545'
-                },
-            ],
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    display: true
-                }
+            {
+                title: 'Drivers',
+                value: 65,
+                bg: 'bg-success'
             },
-            scales: {
-                y: {
-                    beginAtZero: true
+            {
+                title: 'Trips',
+                value: 42,
+                bg: 'bg-warning'
+            },
+            {
+                title: 'Bookings',
+                value: 18,
+                bg: 'bg-danger'
+            },
+        ]);
+
+        const vehicles = ref([{
+                id: 1,
+                name: 'Truck 1',
+                type: 'Truck',
+                status: 'Active'
+            },
+            {
+                id: 2,
+                name: 'Car 1',
+                type: 'Car',
+                status: 'Active'
+            },
+            {
+                id: 3,
+                name: 'Van 1',
+                type: 'Van',
+                status: 'Maintenance'
+            },
+        ]);
+
+        const drivers = ref([{
+                id: 1,
+                name: 'John Doe',
+                license: 'ABC123',
+                status: 'Active'
+            },
+            {
+                id: 2,
+                name: 'Jane Smith',
+                license: 'XYZ456',
+                status: 'Active'
+            },
+            {
+                id: 3,
+                name: 'Mike Ross',
+                license: 'LMN789',
+                status: 'On Leave'
+            },
+        ]);
+
+        const tripsChart = ref(null);
+        const costChart = ref(null);
+
+        onMounted(() => {
+            new Chart(tripsChart.value, {
+                type: 'bar',
+                data: {
+                    labels: ['Bus', 'Car', 'Micro', 'Ambulance'],
+                    datasets: [{
+                        label: 'Trips Completed',
+                        data: [12, 19, 7, 14],
+                        backgroundColor: '#0d6efd'
+                    }],
+                },
+                options: {
+                    responsive: true
                 }
-            }
-        },
-    });
-});
+            });
+
+            new Chart(costChart.value, {
+                type: 'bar',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
+                    datasets: [{
+                            label: 'Fuel',
+                            data: [12, 19, 7, 14, 10],
+                            backgroundColor: '#198754'
+                        },
+                        {
+                            label: 'Maintenance',
+                            data: [8, 14, 6, 12, 9],
+                            backgroundColor: '#dc3545'
+                        }
+                    ],
+                },
+                options: {
+                    responsive: true
+                }
+            });
+        });
+
+        return {
+            kpiCards,
+            vehicles,
+            drivers,
+            tripsChart,
+            costChart
+        };
+    }
+};
 </script>
 
 <style>
@@ -272,8 +253,18 @@ body {
     margin: 0;
 }
 
-.sidebar-header {
-    font-weight: 600;
+.circle-box {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    background: #0d6efd;
+    color: white;
+    font-size: 32px;
+    font-weight: bold;
+}
+
+.circle-text {
+    text-transform: uppercase;
 }
 
 .nav-link.active {

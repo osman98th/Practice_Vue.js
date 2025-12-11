@@ -5,25 +5,35 @@
             <div class="card-header">
                 <h3 class="card-title">Costing</h3>
             </div>
-            <div class="card-body">
-                <div class="mb-2">
-                    <label>Vehicle Cost</label>
-                    <input type="number" v-model.number="costs.vehicleCost" class="form-control" />
-                </div>
-                <div class="mb-2">
-                    <label>Driver Cost</label>
-                    <input type="number" v-model.number="costs.driverCost" class="form-control" />
-                </div>
-                <div class="mb-2">
-                    <label>Other Expenses</label>
-                    <input type="number" v-model.number="costs.otherExpenses" class="form-control" />
-                </div>
-                <div class="mb-2">
-                    <label>Total Cost</label>
-                    <input type="number" :value="totalCost" class="form-control" readonly />
-                </div>
-                <button class="btn btn-success btn-sm mt-2" @click="saveCosting">Save Costing</button>
+
+            <div class="card-body table-responsive mt-3">
+                <table class="table table-bordered table-hover">
+                    <thead>
+                        <tr>
+                            <th>Vehicle</th>
+                            <th>Driver</th>
+                            <th>Trip Date</th>
+                            <th>Distance (km)</th>
+                            <th>Rate (per km)</th>
+                            <th>Total Cost</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="t in trips" :key="t.id">
+                            <td>{{ getVehicleName(getAssignment(t.assignment_id)?.vehicle_id) }}</td>
+                            <td>{{ getDriverName(getAssignment(t.assignment_id)?.driver_id) }}</td>
+                            <td>{{ t.date }}</td>
+                            <td>{{ t.distance }}</td>
+                            <td>{{ rate }}</td>
+                            <td>{{ t.distance*rate }}</td>
+                        </tr>
+                        <tr v-if="trips.length===0">
+                            <td colspan="6" class="text-center">No trips yet.</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
+
         </div>
     </div>
 </div>
@@ -34,28 +44,32 @@ export default {
     name: "Costing",
     data() {
         return {
-            costs: {
-                vehicleCost: 0,
-                driverCost: 0,
-                otherExpenses: 0
-            }
-        };
-    },
-    computed: {
-        totalCost() {
-            return this.costs.vehicleCost + this.costs.driverCost + this.costs.otherExpenses;
+            assignments: JSON.parse(localStorage.getItem('assignments')) || [],
+            vehicles: JSON.parse(localStorage.getItem('vehicles')) || [],
+            drivers: JSON.parse(localStorage.getItem('drivers')) || [],
+            trips: JSON.parse(localStorage.getItem('trips')) || [],
+            rate: 50 // per km
         }
     },
     methods: {
-        saveCosting() {
-            alert(`Cost saved! Total: ${this.totalCost}`);
+        getAssignment(id) {
+            return this.assignments.find(a => a.id === id);
+        },
+        getVehicleName(id) {
+            const v = this.vehicles.find(v => v.id === id);
+            return v ? v.name : 'Unknown';
+        },
+        getDriverName(id) {
+            const d = this.drivers.find(d => d.id === id);
+            return d ? d.name : 'Unknown';
         }
     }
-};
+}
 </script>
 
 <style scoped>
-.form-control {
-    width: 100%;
+.table th,
+.table td {
+    vertical-align: middle;
 }
 </style>

@@ -13,32 +13,44 @@
                     <h5>{{ isEdit ? "Edit Trip" : "Add Trip" }}</h5>
 
                     <div class="mb-2">
-                        <label>Trip Name</label>
-                        <input type="text" v-model="form.name" class="form-control" />
-                    </div>
-                    <div class="mb-2">
-                        <label>Vehicle</label>
-                        <input type="text" v-model="form.vehicle" class="form-control" />
-                    </div>
-                    <div class="mb-2">
-                        <label>Driver</label>
-                        <input type="text" v-model="form.driver" class="form-control" />
-                    </div>
-                    <div class="mb-2">
-                        <label>Start Date</label>
-                        <input type="date" v-model="form.start" class="form-control" />
-                    </div>
-                    <div class="mb-2">
-                        <label>End Date</label>
-                        <input type="date" v-model="form.end" class="form-control" />
-                    </div>
-                    <div class="mb-2">
-                        <label>Status</label>
-                        <select v-model="form.status" class="form-select">
-                            <option>Planned</option>
-                            <option>Ongoing</option>
-                            <option>Completed</option>
+                        <label>Assignment (Vehicle + Driver)</label>
+                        <select v-model="form.assignment_id" class="form-select">
+                            <option disabled value="">Select Assignment</option>
+                            <option v-for="a in assignments" :key="a.id" :value="a.id">
+                                {{ getVehicleName(a.vehicle_id) }} — {{ getDriverName(a.driver_id) }}
+                            </option>
                         </select>
+                    </div>
+
+                    <div class="mb-2">
+                        <label>Start Location</label>
+                        <select v-model="form.start" class="form-select">
+                            <option disabled value="">Select Start District</option>
+                            <option v-for="d in districts" :key="d" :value="d">{{ d }}</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-2">
+                        <label>End Location</label>
+                        <select v-model="form.end" class="form-select">
+                            <option disabled value="">Select End District</option>
+                            <option v-for="d in districts" :key="d" :value="d">{{ d }}</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-2">
+                        <label>Date</label>
+                        <input type="date" v-model="form.date" class="form-control" />
+                    </div>
+
+                    <div class="mb-2">
+                        <label>Distance (km)</label>
+                        <input type="number" v-model="form.distance" class="form-control" />
+                    </div>
+
+                    <div class="mb-2">
+                        <label>Per Day Cost</label>
+                        <input type="number" :value="calculateCost(form.distance)" class="form-control" readonly />
                     </div>
 
                     <div class="d-flex justify-content-end gap-2 mt-2">
@@ -56,33 +68,33 @@
                     <thead>
                         <tr>
                             <th>ID</th>
-                            <th>Trip Name</th>
                             <th>Vehicle</th>
                             <th>Driver</th>
                             <th>Start</th>
                             <th>End</th>
-                            <th>Status</th>
+                            <th>Date</th>
+                            <th>Distance</th>
+                            <th>Per Day Cost</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr v-for="t in trips" :key="t.id">
                             <td>{{ t.id }}</td>
-                            <td>{{ t.name }}</td>
-                            <td>{{ t.vehicle }}</td>
-                            <td>{{ t.driver }}</td>
+                            <td>{{ getVehicleName(getAssignment(t.assignment_id)?.vehicle_id) }}</td>
+                            <td>{{ getDriverName(getAssignment(t.assignment_id)?.driver_id) }}</td>
                             <td>{{ t.start }}</td>
                             <td>{{ t.end }}</td>
-                            <td>
-                                <span :class="t.status==='Completed' ? 'badge bg-success' : 'badge bg-warning'">{{ t.status }}</span>
-                            </td>
+                            <td>{{ t.date }}</td>
+                            <td>{{ t.distance }}</td>
+                            <td>{{ calculateCost(t.distance) }}</td>
                             <td>
                                 <button class="btn btn-sm btn-info me-1" @click="editTrip(t)">Edit</button>
                                 <button class="btn btn-sm btn-danger" @click="deleteTrip(t.id)">Delete</button>
                             </td>
                         </tr>
-                        <tr v-if="trips.length === 0">
-                            <td colspan="8" class="text-center">No trips found.</td>
+                        <tr v-if="trips.length===0">
+                            <td colspan="9" class="text-center">No trips yet.</td>
                         </tr>
                     </tbody>
                 </table>
@@ -98,73 +110,70 @@ export default {
     name: "Trips",
     data() {
         return {
-            trips: [{
-                    id: 1,
-                    name: 'Trip 1',
-                    vehicle: 'Truck 1',
-                    driver: 'John Doe',
-                    start: '2025-12-10',
-                    end: '2025-12-12',
-                    status: 'Planned'
-                },
-                {
-                    id: 2,
-                    name: 'Trip 2',
-                    vehicle: 'Car 1',
-                    driver: 'Jane Smith',
-                    start: '2025-12-15',
-                    end: '2025-12-18',
-                    status: 'Ongoing'
-                }
-            ],
+            assignments: JSON.parse(localStorage.getItem('assignments')) || [],
+            vehicles: JSON.parse(localStorage.getItem('vehicles')) || [],
+            drivers: JSON.parse(localStorage.getItem('drivers')) || [],
+            trips: JSON.parse(localStorage.getItem('trips')) || [],
             showModal: false,
             isEdit: false,
+            rate: 50, // Per km cost
             form: {
                 id: null,
-                name: '',
-                vehicle: '',
-                driver: '',
+                assignment_id: '',
                 start: '',
                 end: '',
-                status: 'Planned'
-            }
-        };
+                date: '',
+                distance: 0
+            },
+            districts: [
+                "Dhaka", "Chattogram", "Khulna", "Rajshahi", "Barishal", "Sylhet", "Rangpur", "Mymensingh", "Comilla", "Jessore", "Narsingdi", "Bogra", "Cox's Bazar"
+            ]
+        }
     },
     methods: {
         openModal() {
             this.isEdit = false;
             this.form = {
                 id: null,
-                name: '',
-                vehicle: '',
-                driver: '',
+                assignment_id: '',
                 start: '',
                 end: '',
-                status: 'Planned'
+                date: '',
+                distance: 0
             };
             this.showModal = true;
         },
         closeModal() {
             this.showModal = false;
         },
+
+        calculateCost(distance) {
+            return distance ? distance * this.rate : 0;
+        },
+
         saveTrip() {
-            if (!this.form.name || !this.form.vehicle || !this.form.driver || !this.form.start || !this.form.end) {
-                alert('Fill all fields!');
+            if (!this.form.assignment_id || !this.form.start || !this.form.end || !this.form.date) {
+                alert('Fill all fields');
                 return;
             }
+
             if (this.isEdit) {
-                const index = this.trips.findIndex(t => t.id === this.form.id);
-                if (index !== -1) this.trips.splice(index, 1, {
+                const idx = this.trips.findIndex(t => t.id === this.form.id);
+                if (idx !== -1) this.trips.splice(idx, 1, {
                     ...this.form
                 });
             } else {
+                const id = this.trips.length ? Math.max(...this.trips.map(t => t.id)) + 1 : 1;
                 this.trips.push({
                     ...this.form,
-                    id: this.trips.length + 1
+                    id
                 });
             }
-            this.closeModal();
+
+            localStorage.setItem('trips', JSON.stringify(this.trips));
+            this.showModal = false;
         },
+
         editTrip(t) {
             this.form = {
                 ...t
@@ -175,10 +184,23 @@ export default {
         deleteTrip(id) {
             if (confirm(`Delete trip #${id}?`)) {
                 this.trips = this.trips.filter(t => t.id !== id);
+                localStorage.setItem('trips', JSON.stringify(this.trips));
             }
+        },
+
+        getAssignment(id) {
+            return this.assignments.find(a => a.id === id);
+        },
+        getVehicleName(id) {
+            const v = this.vehicles.find(v => v.id === id);
+            return v ? v.name : 'Unknown';
+        },
+        getDriverName(id) {
+            const d = this.drivers.find(d => d.id === id);
+            return d ? d.name : 'Unknown';
         }
     }
-};
+}
 </script>
 
 <style scoped>
@@ -195,13 +217,8 @@ export default {
 .modal-box {
     background: #fff;
     padding: 20px;
-    width: 400px;
+    width: 500px;
     border-radius: 8px;
-}
-
-.badge {
-    padding: 0.4em;
-    font-size: 0.85rem;
 }
 
 .table th,

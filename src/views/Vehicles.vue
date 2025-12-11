@@ -11,7 +11,6 @@
             <div v-if="showModal" class="modal-backdrop">
                 <div class="modal-box">
                     <h5>{{ isEdit ? "Edit Vehicle" : "Add Vehicle" }}</h5>
-
                     <div class="mb-2">
                         <label>Name</label>
                         <input type="text" v-model="form.name" class="form-control" />
@@ -23,6 +22,9 @@
                             <option>Truck</option>
                             <option>Car</option>
                             <option>Microbus</option>
+                            <option>Bus</option>
+                            <option>Pickup</option>
+                            <option>Ambulance</option>
                         </select>
                     </div>
                     <div class="mb-2">
@@ -36,7 +38,6 @@
                             <option>Inactive</option>
                         </select>
                     </div>
-
                     <div class="d-flex justify-content-end gap-2 mt-2">
                         <button class="btn btn-secondary btn-sm" @click="closeModal">Cancel</button>
                         <button class="btn btn-success btn-sm" @click="saveVehicle">
@@ -66,21 +67,20 @@
                             <td>{{ v.type }}</td>
                             <td>{{ v.registration }}</td>
                             <td>
-                                <span :class="v.status === 'Active' ? 'badge bg-success' : 'badge bg-secondary'">
-                                    {{ v.status }}
-                                </span>
+                                <span :class="v.status==='Active'?'badge bg-success':'badge bg-secondary'">{{v.status}}</span>
                             </td>
                             <td>
                                 <button class="btn btn-sm btn-info me-1" @click="editVehicle(v)">Edit</button>
                                 <button class="btn btn-sm btn-danger" @click="deleteVehicle(v.id)">Delete</button>
                             </td>
                         </tr>
-                        <tr v-if="vehicles.length === 0">
+                        <tr v-if="vehicles.length===0">
                             <td colspan="6" class="text-center">No vehicles found.</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
+
         </div>
     </div>
 </div>
@@ -91,41 +91,27 @@ export default {
     name: "Vehicles",
     data() {
         return {
-            vehicles: [{
-                    id: 1,
-                    name: "Truck 1",
-                    type: "Truck",
-                    registration: "AB-1234",
-                    status: "Active"
-                },
-                {
-                    id: 2,
-                    name: "Car 1",
-                    type: "Car",
-                    registration: "CD-5678",
-                    status: "Active"
-                }
-            ],
+            vehicles: JSON.parse(localStorage.getItem('vehicles')) || [],
             showModal: false,
             isEdit: false,
             form: {
                 id: null,
-                name: "",
-                type: "",
-                registration: "",
-                status: "Active"
+                name: '',
+                type: '',
+                registration: '',
+                status: 'Active'
             }
-        };
+        }
     },
     methods: {
         openModal() {
             this.isEdit = false;
             this.form = {
                 id: null,
-                name: "",
-                type: "",
-                registration: "",
-                status: "Active"
+                name: '',
+                type: '',
+                registration: '',
+                status: 'Active'
             };
             this.showModal = true;
         },
@@ -134,22 +120,22 @@ export default {
         },
         saveVehicle() {
             if (!this.form.name || !this.form.type || !this.form.registration) {
-                alert("Fill all fields!");
+                alert('Fill all fields!');
                 return;
             }
-
             if (this.isEdit) {
-                const index = this.vehicles.findIndex(v => v.id === this.form.id);
-                if (index !== -1) this.vehicles.splice(index, 1, {
+                const idx = this.vehicles.findIndex(v => v.id === this.form.id);
+                if (idx !== -1) this.vehicles.splice(idx, 1, {
                     ...this.form
                 });
             } else {
+                const id = this.vehicles.length ? Math.max(...this.vehicles.map(v => v.id)) + 1 : 1;
                 this.vehicles.push({
                     ...this.form,
-                    id: this.vehicles.length + 1
+                    id
                 });
             }
-
+            localStorage.setItem('vehicles', JSON.stringify(this.vehicles));
             this.closeModal();
         },
         editVehicle(v) {
@@ -162,10 +148,11 @@ export default {
         deleteVehicle(id) {
             if (confirm(`Delete vehicle #${id}?`)) {
                 this.vehicles = this.vehicles.filter(v => v.id !== id);
+                localStorage.setItem('vehicles', JSON.stringify(this.vehicles));
             }
         }
     }
-};
+}
 </script>
 
 <style scoped>
@@ -186,13 +173,13 @@ export default {
     border-radius: 8px;
 }
 
-.badge {
-    padding: 0.4em;
-    font-size: 0.85rem;
-}
-
 .table th,
 .table td {
     vertical-align: middle;
+}
+
+.badge {
+    padding: 0.4em;
+    font-size: 0.85rem;
 }
 </style>
