@@ -149,14 +149,17 @@ export default {
             const d = this.drivers.find(d => d.id === id);
             return d ? d.name : 'Unknown';
         },
+
+        // ---------- PROFESSIONAL INVOICE ----------
         downloadInvoice(booking) {
             const doc = new jsPDF("p", "mm", "a4");
             const assignment = this.getAssignment(booking.assignment_id);
-            const vehicleName = this.getVehicleName(assignment ?.vehicle_id); // optional chaining
-            const driverName = this.getDriverName(assignment ?.driver_id); // optional chaining
+            const vehicleName = this.getVehicleName(assignment ?.vehicle_id);
+            const driverName = this.getDriverName(assignment ?.driver_id);
 
+            // HEADER
             doc.setFontSize(18);
-            doc.text("Vachicle INVOICE", 14, 20);
+            doc.text("Fleet Booking Invoice", 14, 20);
 
             doc.setFontSize(10);
             doc.text("Fleet Management Ltd", 150, 20);
@@ -164,10 +167,12 @@ export default {
             doc.text("Phone: 01797 147515", 150, 32);
             doc.text("VAT No: GB123456789", 150, 38);
 
+            // INVOICE INFO
             doc.setFontSize(11);
             doc.text(`Invoice #: INV-${booking.id}`, 14, 40);
             doc.text(`Invoice Date: ${booking.date}`, 14, 46);
 
+            // BILL TO
             doc.setFontSize(12);
             doc.text("Bill To:", 14, 60);
             doc.setFontSize(10);
@@ -175,6 +180,7 @@ export default {
             doc.text("Customer Address", 14, 72);
             doc.text("Phone: 01797147515", 14, 78);
 
+            // VEHICLE DETAILS
             doc.setFontSize(12);
             doc.text("Vehicle Details:", 120, 60);
             doc.setFontSize(10);
@@ -182,7 +188,7 @@ export default {
             doc.text(`Driver: ${driverName}`, 120, 72);
             doc.text(`Booking Date: ${booking.date}`, 120, 78);
 
-            // Table demo row
+            // TABLE HEADER
             let startY = 95;
             doc.setFontSize(10);
             doc.setFillColor(240, 240, 240);
@@ -193,6 +199,7 @@ export default {
             doc.text("Price", 140, startY + 6);
             doc.text("Amount", 170, startY + 6);
 
+            // TABLE ROW (demo)
             startY += 10;
             const qty = 1;
             const price = 100;
@@ -200,22 +207,23 @@ export default {
             doc.text("1", 16, startY);
             doc.text(`Booking Service (${vehicleName})`, 30, startY);
             doc.text(`${qty}`, 120, startY);
-            doc.text(`£${price.toFixed(2)}`, 140, startY);
-            doc.text(`£${amount.toFixed(2)}`, 170, startY);
+            doc.text(`${price.toFixed(2)}`, 140, startY);
+            doc.text(`${amount.toFixed(2)}`, 170, startY);
 
+            // TOTALS
             const vat = amount * 0.2;
             const total = amount + vat;
-
             startY += 15;
             doc.line(120, startY, 196, startY);
             doc.text("Sub Total:", 140, startY + 6);
-            doc.text(`£${amount.toFixed(2)}`, 170, startY + 6);
+            doc.text(`${amount.toFixed(2)}`, 170, startY + 6);
             doc.text("VAT (20%):", 140, startY + 12);
-            doc.text(`£${vat.toFixed(2)}`, 170, startY + 12);
+            doc.text(`${vat.toFixed(2)}`, 170, startY + 12);
             doc.setFontSize(12);
             doc.text("Total:", 140, startY + 22);
-            doc.text(`£${total.toFixed(2)}`, 170, startY + 22);
+            doc.text(`${total.toFixed(2)}`, 170, startY + 22);
 
+            // FOOTER
             doc.setFontSize(9);
             doc.text(
                 "Thank you for choosing us. We hope our service made your life easier.",
@@ -223,7 +231,7 @@ export default {
                 280
             );
 
-            doc.save(`Invoice_${booking.id}.pdf`);
+            doc.save(`Booking_Invoice_${booking.id}.pdf`);
         }
     }
 }

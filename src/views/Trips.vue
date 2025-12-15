@@ -23,34 +23,23 @@
                     </div>
 
                     <div class="mb-2">
-                        <label>Start Location</label>
-                        <select v-model="form.start" class="form-select">
-                            <option disabled value="">Select Start District</option>
-                            <option v-for="d in districts" :key="d" :value="d">{{ d }}</option>
-                        </select>
-                    </div>
-
-                    <div class="mb-2">
-                        <label>End Location</label>
-                        <select v-model="form.end" class="form-select">
-                            <option disabled value="">Select End District</option>
-                            <option v-for="d in districts" :key="d" :value="d">{{ d }}</option>
-                        </select>
-                    </div>
-
-                    <div class="mb-2">
-                        <label>Date</label>
+                        <label>Trip Date</label>
                         <input type="date" v-model="form.date" class="form-control" />
                     </div>
 
                     <div class="mb-2">
-                        <label>Distance (km)</label>
-                        <input type="number" v-model="form.distance" class="form-control" />
+                        <label>Start Location</label>
+                        <input type="text" v-model="form.start" class="form-control" />
                     </div>
 
                     <div class="mb-2">
-                        <label>Per Day Cost</label>
-                        <input type="number" :value="calculateCost(form.distance)" class="form-control" readonly />
+                        <label>End Location</label>
+                        <input type="text" v-model="form.end" class="form-control" />
+                    </div>
+
+                    <div class="mb-2">
+                        <label>Distance (km)</label>
+                        <input type="number" v-model.number="form.distance" class="form-control" />
                     </div>
 
                     <div class="d-flex justify-content-end gap-2 mt-2">
@@ -70,11 +59,10 @@
                             <th>ID</th>
                             <th>Vehicle</th>
                             <th>Driver</th>
+                            <th>Date</th>
                             <th>Start</th>
                             <th>End</th>
-                            <th>Date</th>
-                            <th>Distance</th>
-                            <th>Per Day Cost</th>
+                            <th>Distance (km)</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -83,11 +71,10 @@
                             <td>{{ t.id }}</td>
                             <td>{{ getVehicleName(getAssignment(t.assignment_id)?.vehicle_id) }}</td>
                             <td>{{ getDriverName(getAssignment(t.assignment_id)?.driver_id) }}</td>
+                            <td>{{ t.date }}</td>
                             <td>{{ t.start }}</td>
                             <td>{{ t.end }}</td>
-                            <td>{{ t.date }}</td>
                             <td>{{ t.distance }}</td>
-                            <td>{{ calculateCost(t.distance) }}</td>
                             <td>
                                 <button class="btn btn-sm btn-info me-1" @click="editTrip(t)">Edit</button>
                                 <button class="btn btn-sm btn-danger me-1" @click="deleteTrip(t.id)">Delete</button>
@@ -95,7 +82,7 @@
                             </td>
                         </tr>
                         <tr v-if="trips.length===0">
-                            <td colspan="9" class="text-center">No trips yet.</td>
+                            <td colspan="8" class="text-center">No trips yet.</td>
                         </tr>
                     </tbody>
                 </table>
@@ -119,16 +106,14 @@ export default {
             trips: JSON.parse(localStorage.getItem('trips')) || [],
             showModal: false,
             isEdit: false,
-            rate: 50,
             form: {
                 id: null,
                 assignment_id: '',
+                date: '',
                 start: '',
                 end: '',
-                date: '',
                 distance: 0
-            },
-            districts: ["Dhaka", "Chattogram", "Khulna", "Rajshahi", "Barishal", "Sylhet", "Rangpur", "Mymensingh", "Comilla", "Jessore", "Narsingdi", "Bogra", "Cox's Bazar"]
+            }
         }
     },
     methods: {
@@ -137,9 +122,9 @@ export default {
             this.form = {
                 id: null,
                 assignment_id: '',
+                date: '',
                 start: '',
                 end: '',
-                date: '',
                 distance: 0
             };
             this.showModal = true;
@@ -147,12 +132,9 @@ export default {
         closeModal() {
             this.showModal = false;
         },
-        calculateCost(distance) {
-            return distance ? distance * this.rate : 0;
-        },
         saveTrip() {
-            if (!this.form.assignment_id || !this.form.start || !this.form.end || !this.form.date) {
-                alert('Fill all fields');
+            if (!this.form.assignment_id || !this.form.date || !this.form.start || !this.form.end) {
+                alert('All fields are required');
                 return;
             }
             if (this.isEdit) {
@@ -194,26 +176,52 @@ export default {
             const d = this.drivers.find(d => d.id === id);
             return d ? d.name : 'Unknown';
         },
+        calculateCost(distance) {
+            // Example: $2 per km
+            return distance * 2;
+        },
 
+        // ---------- PROFESSIONAL INVOICE ----------
         downloadInvoice(trip) {
             const doc = new jsPDF("p", "mm", "a4");
             const assignment = this.getAssignment(trip.assignment_id);
-            const vehicleName = this.getVehicleName(assignment ?.vehicle_id); // <-- fixed
-            const driverName = this.getDriverName(assignment ?.driver_id); // <-- fixed
+            const vehicleName = this.getVehicleName(assignment ?.vehicle_id);
+            const driverName = this.getDriverName(assignment ?.driver_id);
 
+            // HEADER
             doc.setFontSize(18);
             doc.text("Fleet Trip Invoice", 14, 20);
-            doc.setFontSize(12);
-            doc.text(`Trip ID: ${trip.id}`, 14, 40);
-            doc.text(`Date: ${trip.date}`, 14, 46);
-            doc.text(`Vehicle: ${vehicleName}`, 14, 60);
-            doc.text(`Driver: ${driverName}`, 14, 66);
-            doc.text(`From: ${trip.start}`, 14, 80);
-            doc.text(`To: ${trip.end}`, 14, 86);
-            doc.text(`Distance: ${trip.distance} km`, 14, 92);
-            doc.text(`Cost: £${this.calculateCost(trip.distance).toFixed(2)}`, 14, 98);
+
             doc.setFontSize(10);
-            doc.text("Thank you for choosing our service.", 14, 280);
+            doc.text("Fleet Management Ltd", 150, 20);
+            doc.text("64 Raman Park Avenue, Dhaka", 150, 26);
+            doc.text("Phone: 01797 147515", 150, 32);
+            doc.text("VAT No: GB123456789", 150, 38);
+
+            // INVOICE INFO
+            doc.setFontSize(11);
+            doc.text(`Invoice #: INV-${trip.id}`, 14, 40);
+            doc.text(`Invoice Date: ${trip.date}`, 14, 46);
+
+            // VEHICLE DETAILS
+            doc.setFontSize(12);
+            doc.text("Trip Details:", 14, 60);
+            doc.setFontSize(10);
+            doc.text(`Vehicle: ${vehicleName}`, 14, 66);
+            doc.text(`Driver: ${driverName}`, 14, 72);
+            doc.text(`From: ${trip.start}`, 14, 78);
+            doc.text(`To: ${trip.end}`, 14, 84);
+            doc.text(`Distance: ${trip.distance} km`, 14, 90);
+            doc.text(`Cost: ${this.calculateCost(trip.distance).toFixed(2)}`, 14, 96);
+
+            // FOOTER
+            doc.setFontSize(9);
+            doc.text(
+                "Thank you for choosing our service. We hope our service made your life easier.",
+                14,
+                280
+            );
+
             doc.save(`Trip_Invoice_${trip.id}.pdf`);
         }
     }
@@ -234,7 +242,7 @@ export default {
 .modal-box {
     background: #fff;
     padding: 20px;
-    width: 500px;
+    width: 400px;
     border-radius: 8px;
 }
 
