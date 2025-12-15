@@ -1,7 +1,12 @@
 <template>
 <div class="wrapper">
+    <!-- FIXED NAVBAR -->
     <Navbar @toggleSidebar="toggleSidebar" />
+
+    <!-- SIDEBAR -->
     <Sidebar :isOpen="isSidebarOpen" @toggleSidebar="toggleSidebar" />
+
+    <!-- MAIN CONTENT -->
     <div class="content-wrapper" :class="{ 'sidebar-collapsed': isMobile && !isSidebarOpen }">
         <router-view />
     </div>
@@ -43,22 +48,28 @@ export default {
 </script>
 
 <style>
+/* ===== GLOBAL LAYOUT ===== */
+
 .wrapper {
-    display: flex;
-    flex-direction: column;
     min-height: 100vh;
 }
 
+/* Navbar height = 56px */
 .content-wrapper {
+    margin-top: 56px;
+    /* ✅ VERY IMPORTANT */
     margin-left: 250px;
+    /* sidebar width */
     padding: 20px;
     transition: margin-left 0.3s ease;
 }
 
+/* Mobile sidebar closed */
 .sidebar-collapsed {
     margin-left: 0;
 }
 
+/* Mobile */
 @media (max-width: 768px) {
     .content-wrapper {
         margin-left: 0;
