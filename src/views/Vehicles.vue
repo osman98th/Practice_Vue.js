@@ -11,10 +11,12 @@
             <div v-if="showModal" class="modal-backdrop">
                 <div class="modal-box">
                     <h5>{{ isEdit ? "Edit Vehicle" : "Add Vehicle" }}</h5>
+
                     <div class="mb-2">
                         <label>Name</label>
                         <input type="text" v-model="form.name" class="form-control" />
                     </div>
+
                     <div class="mb-2">
                         <label>Type</label>
                         <select v-model="form.type" class="form-select">
@@ -27,10 +29,12 @@
                             <option>Ambulance</option>
                         </select>
                     </div>
+
                     <div class="mb-2">
                         <label>Registration</label>
                         <input type="text" v-model="form.registration" class="form-control" />
                     </div>
+
                     <div class="mb-2">
                         <label>Status</label>
                         <select v-model="form.status" class="form-select">
@@ -38,6 +42,7 @@
                             <option>Inactive</option>
                         </select>
                     </div>
+
                     <div class="d-flex justify-content-end gap-2 mt-2">
                         <button class="btn btn-secondary btn-sm" @click="closeModal">Cancel</button>
                         <button class="btn btn-success btn-sm" @click="saveVehicle">
@@ -67,7 +72,7 @@
                             <td>{{ v.type }}</td>
                             <td>{{ v.registration }}</td>
                             <td>
-                                <span :class="v.status==='Active'?'badge bg-success':'badge bg-secondary'">{{v.status}}</span>
+                                <span :class="v.status==='Active'?'badge bg-success':'badge bg-secondary'">{{ v.status }}</span>
                             </td>
                             <td>
                                 <button class="btn btn-sm btn-info me-1" @click="editVehicle(v)">Edit</button>
@@ -123,6 +128,7 @@ export default {
                 alert('Fill all fields!');
                 return;
             }
+
             if (this.isEdit) {
                 const idx = this.vehicles.findIndex(v => v.id === this.form.id);
                 if (idx !== -1) this.vehicles.splice(idx, 1, {
@@ -135,6 +141,7 @@ export default {
                     id
                 });
             }
+
             localStorage.setItem('vehicles', JSON.stringify(this.vehicles));
             this.closeModal();
         },

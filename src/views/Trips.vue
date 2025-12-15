@@ -90,7 +90,8 @@
                             <td>{{ calculateCost(t.distance) }}</td>
                             <td>
                                 <button class="btn btn-sm btn-info me-1" @click="editTrip(t)">Edit</button>
-                                <button class="btn btn-sm btn-danger" @click="deleteTrip(t.id)">Delete</button>
+                                <button class="btn btn-sm btn-danger me-1" @click="deleteTrip(t.id)">Delete</button>
+                                <button class="btn btn-sm btn-warning" @click="downloadInvoice(t)">Invoice</button>
                             </td>
                         </tr>
                         <tr v-if="trips.length===0">
@@ -106,6 +107,8 @@
 </template>
 
 <script>
+import jsPDF from "jspdf";
+
 export default {
     name: "Trips",
     data() {
@@ -116,7 +119,7 @@ export default {
             trips: JSON.parse(localStorage.getItem('trips')) || [],
             showModal: false,
             isEdit: false,
-            rate: 50, // Per km cost
+            rate: 50,
             form: {
                 id: null,
                 assignment_id: '',
@@ -125,9 +128,7 @@ export default {
                 date: '',
                 distance: 0
             },
-            districts: [
-                "Dhaka", "Chattogram", "Khulna", "Rajshahi", "Barishal", "Sylhet", "Rangpur", "Mymensingh", "Comilla", "Jessore", "Narsingdi", "Bogra", "Cox's Bazar"
-            ]
+            districts: ["Dhaka", "Chattogram", "Khulna", "Rajshahi", "Barishal", "Sylhet", "Rangpur", "Mymensingh", "Comilla", "Jessore", "Narsingdi", "Bogra", "Cox's Bazar"]
         }
     },
     methods: {
@@ -146,17 +147,14 @@ export default {
         closeModal() {
             this.showModal = false;
         },
-
         calculateCost(distance) {
             return distance ? distance * this.rate : 0;
         },
-
         saveTrip() {
             if (!this.form.assignment_id || !this.form.start || !this.form.end || !this.form.date) {
                 alert('Fill all fields');
                 return;
             }
-
             if (this.isEdit) {
                 const idx = this.trips.findIndex(t => t.id === this.form.id);
                 if (idx !== -1) this.trips.splice(idx, 1, {
@@ -169,11 +167,9 @@ export default {
                     id
                 });
             }
-
             localStorage.setItem('trips', JSON.stringify(this.trips));
             this.showModal = false;
         },
-
         editTrip(t) {
             this.form = {
                 ...t
@@ -187,7 +183,6 @@ export default {
                 localStorage.setItem('trips', JSON.stringify(this.trips));
             }
         },
-
         getAssignment(id) {
             return this.assignments.find(a => a.id === id);
         },
@@ -198,6 +193,28 @@ export default {
         getDriverName(id) {
             const d = this.drivers.find(d => d.id === id);
             return d ? d.name : 'Unknown';
+        },
+
+        downloadInvoice(trip) {
+            const doc = new jsPDF("p", "mm", "a4");
+            const assignment = this.getAssignment(trip.assignment_id);
+            const vehicleName = this.getVehicleName(assignment ?.vehicle_id); // <-- fixed
+            const driverName = this.getDriverName(assignment ?.driver_id); // <-- fixed
+
+            doc.setFontSize(18);
+            doc.text("Fleet Trip Invoice", 14, 20);
+            doc.setFontSize(12);
+            doc.text(`Trip ID: ${trip.id}`, 14, 40);
+            doc.text(`Date: ${trip.date}`, 14, 46);
+            doc.text(`Vehicle: ${vehicleName}`, 14, 60);
+            doc.text(`Driver: ${driverName}`, 14, 66);
+            doc.text(`From: ${trip.start}`, 14, 80);
+            doc.text(`To: ${trip.end}`, 14, 86);
+            doc.text(`Distance: ${trip.distance} km`, 14, 92);
+            doc.text(`Cost: £${this.calculateCost(trip.distance).toFixed(2)}`, 14, 98);
+            doc.setFontSize(10);
+            doc.text("Thank you for choosing our service.", 14, 280);
+            doc.save(`Trip_Invoice_${trip.id}.pdf`);
         }
     }
 }
