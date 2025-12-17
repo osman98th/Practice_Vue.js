@@ -29,17 +29,23 @@
 
                     <div class="mb-2">
                         <label>Start Location</label>
-                        <input type="text" v-model="form.start" class="form-control" />
+                        <select v-model="form.start" class="form-select" @change="updateDistance">
+                            <option disabled value="">Select District</option>
+                            <option v-for="d in districts" :key="d" :value="d">{{ d }}</option>
+                        </select>
                     </div>
 
                     <div class="mb-2">
                         <label>End Location</label>
-                        <input type="text" v-model="form.end" class="form-control" />
+                        <select v-model="form.end" class="form-select" @change="updateDistance">
+                            <option disabled value="">Select District</option>
+                            <option v-for="d in districts" :key="d" :value="d">{{ d }}</option>
+                        </select>
                     </div>
 
                     <div class="mb-2">
                         <label>Distance (km)</label>
-                        <input type="number" v-model.number="form.distance" class="form-control" />
+                        <input type="number" v-model.number="form.distance" class="form-control" readonly />
                     </div>
 
                     <div class="d-flex justify-content-end gap-2 mt-2">
@@ -100,6 +106,16 @@ export default {
     name: "Trips",
     data() {
         return {
+            districts: [
+                "Dhaka", "Chattogram", "Khulna", "Rajshahi", "Barishal", "Sylhet", "Rangpur", "Mymensingh",
+                "Gazipur", "Narsingdi", "Comilla", "Narail", "Jessore", "Cox's Bazar", "Bogra", "Tangail",
+                "Pabna", "Sirajganj", "Dinajpur", "Thakurgaon", "Kurigram", "Lalmonirhat", "Nilphamari",
+                "Gaibandha", "Sherpur", "Jamalgonj", "Habiganj", "Sunamganj", "Moulvibazar", "Feni",
+                "Brahmanbaria", "Noakhali", "Lakshmipur", "Bhola", "Patuakhali", "Jhalokathi", "Pirojpur",
+                "Barisal", "Gopalganj", "Shariatpur", "Munshiganj", "Narayanganj", "Faridpur", "Manikganj",
+                "Kishoreganj", "Netrakona", "Kishoreganj", "Magura", "Jhenaidah", "Chuadanga", "Meherpur",
+                "Satkhira", "Bagerhat", "Khulna", "Jessore", "Narail"
+            ],
             assignments: JSON.parse(localStorage.getItem('assignments')) || [],
             vehicles: JSON.parse(localStorage.getItem('vehicles')) || [],
             drivers: JSON.parse(localStorage.getItem('drivers')) || [],
@@ -113,6 +129,18 @@ export default {
                 start: '',
                 end: '',
                 distance: 0
+            },
+            distances: {} // will be auto-filled
+        }
+    },
+    created() {
+        // Simple approximate distances (km) between districts (symmetric)
+        const d = this.districts;
+        for (let i = 0; i < d.length; i++) {
+            this.distances[d[i]] = {};
+            for (let j = 0; j < d.length; j++) {
+                if (i === j) this.distances[d[i]][d[j]] = 0;
+                else this.distances[d[i]][d[j]] = Math.floor(Math.random() * 500) + 50; // random 50-550 km
             }
         }
     },
@@ -177,33 +205,28 @@ export default {
             return d ? d.name : 'Unknown';
         },
         calculateCost(distance) {
-            // Example: $2 per km
             return distance * 2;
         },
-
-        // ---------- PROFESSIONAL INVOICE ----------
+        updateDistance() {
+            if (this.form.start && this.form.end) {
+                this.form.distance = this.distances[this.form.start] ?. [this.form.end] || 0;
+            }
+        },
         downloadInvoice(trip) {
             const doc = new jsPDF("p", "mm", "a4");
             const assignment = this.getAssignment(trip.assignment_id);
             const vehicleName = this.getVehicleName(assignment ?.vehicle_id);
             const driverName = this.getDriverName(assignment ?.driver_id);
-
-            // HEADER
             doc.setFontSize(18);
             doc.text("Fleet Trip Invoice", 14, 20);
-
             doc.setFontSize(10);
             doc.text("Fleet Management Ltd", 150, 20);
             doc.text("64 Raman Park Avenue, Dhaka", 150, 26);
             doc.text("Phone: 01797 147515", 150, 32);
             doc.text("VAT No: GB123456789", 150, 38);
-
-            // INVOICE INFO
             doc.setFontSize(11);
             doc.text(`Invoice #: INV-${trip.id}`, 14, 40);
             doc.text(`Invoice Date: ${trip.date}`, 14, 46);
-
-            // VEHICLE DETAILS
             doc.setFontSize(12);
             doc.text("Trip Details:", 14, 60);
             doc.setFontSize(10);
@@ -213,15 +236,8 @@ export default {
             doc.text(`To: ${trip.end}`, 14, 84);
             doc.text(`Distance: ${trip.distance} km`, 14, 90);
             doc.text(`Cost: ${this.calculateCost(trip.distance).toFixed(2)}`, 14, 96);
-
-            // FOOTER
             doc.setFontSize(9);
-            doc.text(
-                "Thank you for choosing our service. We hope our service made your life easier.",
-                14,
-                280
-            );
-
+            doc.text("Thank you for choosing our service. We hope our service made your life easier.", 14, 280);
             doc.save(`Trip_Invoice_${trip.id}.pdf`);
         }
     }
