@@ -1,13 +1,6 @@
 <template>
 <div class="d-flex" style="min-height: 100vh;">
 
-    <!-- Sidebar (Only Circle Content) -->
-    <nav class="bg-light border-end vh-100 d-flex flex-column align-items-center justify-content-start pt-4" style="width: 250px;">
-        <div class="circle-box d-flex align-items-center justify-content-center mb-3">
-            <span class="circle-text">FM</span>
-        </div>
-    </nav>
-
     <!-- Main content -->
     <div class="flex-fill">
         <!-- Navbar -->
@@ -54,64 +47,9 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Tables
-            <div class="row">
-                <div class="col-md-6 mb-4">
-                    <div class="card">
-                        <div class="card-header">Vehicles</div>
-                        <div class="card-body table-responsive">
-                            <table class="table table-bordered table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>ID</th>
-                                        <th>Name</th>
-                                        <th>Type</th>
-                                        <th>Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr v-for="v in vehicles" :key="v.id">
-                                        <td>{{ v.id }}</td>
-                                        <td>{{ v.name }}</td>
-                                        <td>{{ v.type }}</td>
-                                        <td>{{ v.status }}</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-6 mb-4">
-                    <div class="card">
-                        <div class="card-header">Drivers</div>
-                        <div class="card-body table-responsive">
-                            <table class="table table-bordered table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>ID</th>
-                                        <th>Name</th>
-                                        <th>License</th>
-                                        <th>Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr v-for="d in drivers" :key="d.id">
-                                        <td>{{ d.id }}</td>
-                                        <td>{{ d.name }}</td>
-                                        <td>{{ d.license }}</td>
-                                        <td>{{ d.status }}</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-            </div> -->
         </div>
     </div>
+
 </div>
 </template>
 
@@ -129,7 +67,6 @@ import {
     Tooltip,
     Legend
 } from 'chart.js';
-
 Chart.register(BarController, BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 
 export default {
@@ -153,46 +90,6 @@ export default {
                 title: 'Bookings',
                 value: 18,
                 bg: 'bg-danger'
-            },
-        ]);
-
-        const vehicles = ref([{
-                id: 1,
-                name: 'Truck 1',
-                type: 'Truck',
-                status: 'Active'
-            },
-            {
-                id: 2,
-                name: 'Car 1',
-                type: 'Car',
-                status: 'Active'
-            },
-            {
-                id: 3,
-                name: 'Van 1',
-                type: 'Van',
-                status: 'Maintenance'
-            },
-        ]);
-
-        const drivers = ref([{
-                id: 1,
-                name: 'John Doe',
-                license: 'ABC123',
-                status: 'Active'
-            },
-            {
-                id: 2,
-                name: 'Jane Smith',
-                license: 'XYZ456',
-                status: 'Active'
-            },
-            {
-                id: 3,
-                name: 'Mike Ross',
-                license: 'LMN789',
-                status: 'On Leave'
             },
         ]);
 
@@ -239,8 +136,6 @@ export default {
 
         return {
             kpiCards,
-            vehicles,
-            drivers,
             tripsChart,
             costChart
         };
@@ -248,7 +143,7 @@ export default {
 };
 </script>
 
-<style>
+<style scoped>
 body {
     margin: 0;
 }
@@ -267,7 +162,26 @@ body {
     text-transform: uppercase;
 }
 
-.nav-link.active {
+.sidebar-menu {
+    padding-left: 0;
+    margin-top: 20px;
+}
+
+.sidebar-menu li {
+    margin-bottom: 10px;
+}
+
+.sidebar-menu a {
+    text-decoration: none;
+    display: block;
+    padding: 10px 20px;
+    color: #000;
+    border-radius: 5px;
+}
+
+.sidebar-menu a.router-link-exact-active {
+    background: #0d6efd;
+    color: white;
     font-weight: 600;
 }
 </style>

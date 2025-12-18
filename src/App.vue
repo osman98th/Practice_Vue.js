@@ -1,12 +1,10 @@
 <template>
 <div class="wrapper">
-    <!-- FIXED NAVBAR -->
-    <Navbar @toggleSidebar="toggleSidebar" />
+    <!-- Show Navbar + Sidebar ONLY if authenticated -->
+    <Navbar v-if="isAuth" @toggleSidebar="toggleSidebar" />
+    <Sidebar v-if="isAuth" :isOpen="isSidebarOpen" @toggleSidebar="toggleSidebar" />
 
-    <!-- SIDEBAR -->
-    <Sidebar :isOpen="isSidebarOpen" @toggleSidebar="toggleSidebar" />
-
-    <!-- MAIN CONTENT -->
+    <!-- Main content -->
     <div class="content-wrapper" :class="{ 'sidebar-collapsed': isMobile && !isSidebarOpen }">
         <router-view />
     </div>
@@ -26,7 +24,8 @@ export default {
     data() {
         return {
             isSidebarOpen: true,
-            isMobile: false
+            isMobile: false,
+            isAuth: false
         };
     },
     methods: {
@@ -40,6 +39,13 @@ export default {
     mounted() {
         this.checkMobile();
         window.addEventListener("resize", this.checkMobile);
+        this.isAuth = localStorage.getItem("isAuth") === "true"; // ✅ check auth
+    },
+    watch: {
+        '$route'(to) {
+            // update isAuth on route change
+            this.isAuth = localStorage.getItem("isAuth") === "true";
+        }
     },
     beforeUnmount() {
         window.removeEventListener("resize", this.checkMobile);
@@ -48,28 +54,23 @@ export default {
 </script>
 
 <style>
-/* ===== GLOBAL LAYOUT ===== */
-
 .wrapper {
     min-height: 100vh;
 }
 
-/* Navbar height = 56px */
 .content-wrapper {
     margin-top: 56px;
-    /* ✅ VERY IMPORTANT */
+    /* navbar height */
     margin-left: 250px;
     /* sidebar width */
     padding: 20px;
     transition: margin-left 0.3s ease;
 }
 
-/* Mobile sidebar closed */
 .sidebar-collapsed {
     margin-left: 0;
 }
 
-/* Mobile */
 @media (max-width: 768px) {
     .content-wrapper {
         margin-left: 0;
